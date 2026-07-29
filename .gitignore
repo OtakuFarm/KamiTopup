@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+# Environment & secrets
+.env
+backend/.env
+*.local
+
+# Database
+backend/data/
+*.db
+*.sqlite
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Build / deploy
+.vercel
+.railway
+dist/
+build/
+EOF
+
+# Also update main README briefly
+cat >> /home/workdir/artifacts/game-topup-site/README.md << 'EOF'
+
+## CI/CD (Automated Deployments)
+
+GitHub Actions workflows are included:
+
+- `.github/workflows/ci.yml` – syntax & structure checks
+- `.github/workflows/deploy-backend.yml` – auto-deploy backend to Railway
+- `.github/workflows/deploy-frontend.yml` – auto-deploy frontend to Vercel
+
+See **DEPLOY.md** for the complete setup guide (secrets, Railway, Vercel, etc.).
+EOF
+
+echo "Pipeline files created"
+ls -la /home/workdir/artifacts/game-topup-site/.github/workflows/
