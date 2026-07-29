@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order – KamiTopup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7c3aed',
+            secondary: '#06b6d4',
+            dark: '#0f0f13',
+            card: '#1a1a24',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>body { background-color: #0f0f13; }</style>
+</head>
+<body class="text-white font-sans antialiased min-h-screen">
+
+  <nav class="fixed top-0 w-full z-50 bg-dark/90 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="../index.html" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold">K</div>
+        <span class="text-xl font-bold">KamiTopup</span>
+      </a>
+      <a href="../index.html" class="text-sm text-gray-400 hover:text-white">← Home</a>
+    </div>
+  </nav>
+
+  <main class="pt-28 pb-16 px-4">
+    <div class="max-w-md mx-auto">
+      <h1 class="text-2xl font-bold mb-6 text-center">Track Your Order</h1>
+
+      <div class="bg-card rounded-2xl border border-white/10 p-6 mb-6">
+        <label class="block text-sm text-gray-400 mb-2">Order ID</label>
+        <div class="flex gap-3">
+          <input type="text" id="orderIdInput" placeholder="e.g. NT12345678"
+            class="flex-1 px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none">
+          <button id="trackBtn" class="px-5 py-3 rounded-xl bg-primary hover:bg-violet-600 font-semibold transition">
+            Track
+          </button>
+        </div>
+      </div>
+
+      <div id="result" class="hidden bg-card rounded-2xl border border-white/10 p-6">
+        <!-- result injected -->
+      </div>
+
+      <p class="text-center text-sm text-gray-500 mt-8">
+        Need help? Contact support with your Order ID.
+      </p>
+    </div>
+  </main>
+
+  <script>
+    document.getElementById('trackBtn').addEventListener('click', () => {
+      const input = document.getElementById('orderIdInput').value.trim().toUpperCase();
+      const lastOrder = JSON.parse(localStorage.getItem('lastOrder') || '{}');
+      const resultDiv = document.getElementById('result');
+
+      if (!input) {
+        alert('Please enter an Order ID');
+        return;
+      }
+
+      // Demo: only checks local last order. In production this calls your backend.
+      if (lastOrder.orderId && lastOrder.orderId === input) {
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+              <span class="text-gray-400">Order ID</span>
+              <span class="font-mono">${lastOrder.orderId}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Game</span>
+              <span class="capitalize">${lastOrder.game}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Package</span>
+              <span>${lastOrder.package?.amount}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Player ID</span>
+              <span class="font-mono">${lastOrder.playerId}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">Status</span>
+              <span class="text-green-400 font-medium">Completed</span>
+            </div>
+          </div>
+          <p class="text-xs text-gray-500 mt-4">In a real system this status comes from your supplier API + database.</p>
+        `;
+      } else {
+        resultDiv.classList.remove('hidden');
+        resultDiv.innerHTML = `
+          <p class="text-center text-gray-400">
+            <i class="fas fa-search mb-3 text-2xl"></i><br>
+            Order not found in this demo.<br>
+            <span class="text-xs">In production this will query your database.</span>
+          </p>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

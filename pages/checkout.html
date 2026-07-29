@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout – KamiTopup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7c3aed',
+            secondary: '#06b6d4',
+            dark: '#0f0f13',
+            card: '#1a1a24',
+          }
+        }
+      }
+    }
+  </script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <script src="https://cdn.paddle.com/paddle/v2/paddle.js"></script>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>body { background-color: #0f0f13; }</style>
+</head>
+<body class="text-white font-sans antialiased min-h-screen">
+
+  <nav class="fixed top-0 w-full z-50 bg-dark/90 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="../index.html" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold">K</div>
+        <span class="text-xl font-bold">KamiTopup</span>
+      </a>
+      <span class="text-sm text-gray-400"><i class="fas fa-lock mr-1"></i> Secure Checkout</span>
+    </div>
+  </nav>
+
+  <main class="pt-24 pb-16 px-4">
+    <div class="max-w-lg mx-auto">
+      <h1 class="text-2xl font-bold mb-8 text-center">Complete Your Order</h1>
+
+      <!-- Order Summary -->
+      <div class="bg-card rounded-2xl border border-white/10 p-6 mb-6">
+        <h2 class="font-semibold mb-4">Order Summary</h2>
+        <div id="summary" class="space-y-3 text-sm"></div>
+        <div class="border-t border-white/10 mt-4 pt-4 flex justify-between font-bold text-lg">
+          <span>Total</span>
+          <span id="total" class="text-primary">$0.00</span>
+        </div>
+      </div>
+
+      <!-- Country selector -->
+      <div class="bg-card rounded-2xl border border-white/10 p-6 mb-6">
+        <h2 class="font-semibold mb-3">Your Country</h2>
+        <p class="text-sm text-gray-400 mb-3">We show the best payment methods for your location</p>
+        <select id="countrySelect" class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none">
+          <option value="">Detecting...</option>
+        </select>
+        <p id="detectedNote" class="text-xs text-gray-500 mt-2"></p>
+      </div>
+
+      <!-- Payment methods (2 options) -->
+      <div class="bg-card rounded-2xl border border-white/10 p-6 mb-6">
+        <h2 class="font-semibold mb-4">Payment Method</h2>
+        <div id="paymentOptions" class="space-y-3">
+          <div class="text-center text-gray-500 py-6 text-sm">Loading payment options...</div>
+        </div>
+      </div>
+
+      <!-- Promo -->
+      <div class="bg-card rounded-2xl border border-white/10 p-6 mb-6">
+        <h2 class="font-semibold mb-3">Promo Code</h2>
+        <div class="flex gap-3">
+          <input type="text" id="promoCode" placeholder="Enter code"
+            class="flex-1 px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none uppercase">
+          <button type="button" id="applyPromo" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/15 font-medium transition">Apply</button>
+        </div>
+        <p id="promoMessage" class="text-sm mt-2 hidden"></p>
+        <div id="discountRow" class="hidden mt-3 pt-3 border-t border-white/10 flex justify-between text-sm">
+          <span class="text-green-400">Discount</span>
+          <span class="text-green-400 font-medium" id="discountAmount">-$0.00</span>
+        </div>
+      </div>
+
+      <!-- reCAPTCHA -->
+      <div class="bg-card rounded-2xl border border-white/10 p-6 mb-6">
+        <h2 class="font-semibold mb-3 flex items-center gap-2">
+          <i class="fas fa-shield-alt text-primary"></i> Security Check
+        </h2>
+        <div class="g-recaptcha" data-sitekey="YOUR_RECAPTCHA_SITE_KEY" data-theme="dark"></div>
+        <p id="captchaError" class="text-red-400 text-sm mt-3 hidden">Please complete the reCAPTCHA.</p>
+      </div>
+
+      <!-- Email for receipt -->
+      <div class="bg-card rounded-2xl border border-white/10 p-6 mb-6">
+        <label class="block text-sm text-gray-400 mb-1.5">Email (for receipt)</label>
+        <input type="email" id="payEmail" placeholder="you@email.com"
+          class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none">
+      </div>
+
+      <button id="payBtn" disabled class="w-full py-4 rounded-xl bg-primary hover:bg-violet-600 font-semibold text-lg transition flex items-center justify-center gap-2 disabled:opacity-40">
+        <i class="fas fa-lock"></i> <span id="payBtnText">Select a payment method</span>
+      </button>
+
+      <!-- Demo fallback -->
+      <button id="demoPayBtn" class="w-full mt-3 py-3.5 rounded-xl bg-white/10 hover:bg-white/15 font-semibold transition">
+        <i class="fas fa-bolt mr-2"></i> Simulate Payment (Demo)
+      </button>
+
+      <p class="text-center text-xs text-gray-500 mt-4">
+        <i class="fas fa-shield-alt text-green-400"></i> Payments are secured with encryption
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+
+    // ========== PADDLE (Sandbox) ==========
+    // Put live values in production; keep sandbox for testing
+    const PADDLE_CLIENT_TOKEN = 'test_25ae53c2becb36e5d2fee9ebe73';
+    const PADDLE_PRICE_ID = 'pri_01kynwdzczdhyhqf5q50j3seta';
+    const PADDLE_ENV = 'sandbox'; // change to 'production' when live
+
+    const order = JSON.parse(localStorage.getItem('pendingOrder') || '{}');
+    if (!order.package) window.location.href = '../index.html';
+
+    // Initialize Paddle
+    if (typeof Paddle !== 'undefined' && PADDLE_CLIENT_TOKEN) {
+      try {
+        Paddle.Environment.set(PADDLE_ENV);
+        Paddle.Initialize({
+          token: PADDLE_CLIENT_TOKEN,
+          eventCallback: function(event) {
+            if (event.name === 'checkout.completed') {
+              handlePaddleSuccess(event);
+            }
+            if (event.name === 'checkout.closed') {
+              document.getElementById('payBtn').disabled = false;
+              document.getElementById('payBtnText').textContent = 'Pay with Paddle';
+            }
+          }
+        });
+      } catch (e) {
+        console.warn('Paddle init:', e);
+      }
+    }
+
+    let selectedGateway = null;
+    let finalPrice = order.package.price;
+    let appliedPromo = null;
+    let currentCountry = 'NG';
+
+    // Render summary
+    document.getElementById('summary').innerHTML = `
+      <div class="flex justify-between"><span class="text-gray-400">Game</span><span class="capitalize">${order.game}</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Package</span><span>${order.package.amount}</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Player ID</span><span class="font-mono">${order.playerId}</span></div>
+      ${order.serverId ? `<div class="flex justify-between"><span class="text-gray-400">Server</span><span>${order.serverId}</span></div>` : ''}
+    `;
+    document.getElementById('total').textContent = '$' + order.package.price.toFixed(2);
+    if (order.customerEmail) document.getElementById('payEmail').value = order.customerEmail;
+
+    // Load payment options
+    async function loadOptions(country) {
+      try {
+        const res = await fetch(API_BASE + '/payments/options?country=' + encodeURIComponent(country || ''));
+        const data = await res.json();
+        currentCountry = data.detectedCountry || country || 'NG';
+
+        // Fill country dropdown
+        const select = document.getElementById('countrySelect');
+        select.innerHTML = data.countries.map(c =>
+          `<option value="${c.code}" ${c.code === currentCountry ? 'selected' : ''}>${c.name}</option>`
+        ).join('');
+
+        document.getElementById('detectedNote').textContent =
+          `Showing methods for ${data.countryName || currentCountry}`;
+
+        renderPaymentOptions(data.options || []);
+      } catch (e) {
+        console.error(e);
+        // Offline fallback
+        renderPaymentOptions([
+          { id: 'paystack', name: 'Paystack', label: 'Card / Bank', description: 'Africa', icon: '💳', recommended: true },
+          { id: 'paddle', name: 'Paddle', label: 'International Card', description: 'Worldwide', icon: '🌐', recommended: false }
+        ]);
+      }
+    }
+
+    function renderPaymentOptions(options) {
+      const box = document.getElementById('paymentOptions');
+      if (!options.length) {
+        box.innerHTML = '<p class="text-gray-500 text-sm">No payment methods available</p>';
+        return;
+      }
+
+      box.innerHTML = options.map((opt, i) => `
+        <label class="flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition
+          ${i === 0 ? 'border-primary bg-primary/10' : 'border-white/10 hover:border-white/20'}">
+          <input type="radio" name="gateway" value="${opt.id}" class="mt-1" ${i === 0 ? 'checked' : ''}
+            onchange="selectGateway('${opt.id}', '${opt.name}')">
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="text-lg">${opt.icon || '💳'}</span>
+              <span class="font-medium">${opt.name}</span>
+              ${opt.recommended ? '<span class="text-[10px] px-1.5 py-0.5 rounded bg-primary/30 text-primary">Recommended</span>' : ''}
+            </div>
+            <div class="text-sm text-gray-400 mt-0.5">${opt.label}</div>
+            <div class="text-xs text-gray-500">${opt.description || ''}</div>
+          </div>
+        </label>
+      `).join('');
+
+      selectGateway(options[0].id, options[0].name);
+    }
+
+    function selectGateway(id, name) {
+      selectedGateway = id;
+      document.getElementById('payBtn').disabled = false;
+      document.getElementById('payBtnText').textContent = 'Pay with ' + name;
+    }
+
+    document.getElementById('countrySelect').addEventListener('change', (e) => {
+      loadOptions(e.target.value);
+    });
+
+    // Promo
+    document.getElementById('applyPromo').addEventListener('click', async () => {
+      const code = document.getElementById('promoCode').value.trim();
+      const msg = document.getElementById('promoMessage');
+      if (!code) return;
+      try {
+        const res = await fetch(API_BASE + '/promo/validate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, amount: order.package.price })
+        });
+        const data = await res.json();
+        if (data.valid) {
+          appliedPromo = data;
+          finalPrice = data.finalAmount;
+          msg.textContent = data.message;
+          msg.className = 'text-sm mt-2 text-green-400';
+          document.getElementById('discountRow').classList.remove('hidden');
+          document.getElementById('discountAmount').textContent = '-$' + data.discount.toFixed(2);
+          document.getElementById('total').textContent = '$' + data.finalAmount.toFixed(2);
+        } else {
+          appliedPromo = null;
+          finalPrice = order.package.price;
+          msg.textContent = data.message || 'Invalid code';
+          msg.className = 'text-sm mt-2 text-red-400';
+          document.getElementById('discountRow').classList.add('hidden');
+          document.getElementById('total').textContent = '$' + order.package.price.toFixed(2);
+        }
+        msg.classList.remove('hidden');
+      } catch (e) {
+        msg.textContent = 'Could not validate code';
+        msg.className = 'text-sm mt-2 text-red-400';
+        msg.classList.remove('hidden');
+      }
+    });
+
+    function getRecaptchaToken() {
+      if (typeof grecaptcha === 'undefined') return 'demo';
+      return grecaptcha.getResponse() || null;
+    }
+
+    // Main pay button
+    document.getElementById('payBtn').addEventListener('click', async () => {
+      const token = getRecaptchaToken();
+      if (!token) {
+        document.getElementById('captchaError').classList.remove('hidden');
+        return;
+      }
+      document.getElementById('captchaError').classList.add('hidden');
+
+      const email = document.getElementById('payEmail').value.trim() || order.customerEmail || 'customer@example.com';
+
+      if (selectedGateway === 'paystack') {
+        await startPaystack(email, token);
+      } else if (selectedGateway === 'paddle') {
+        await startPaddle(email, token);
+      } else if (selectedGateway === 'flutterwave') {
+        alert('Flutterwave integration ready — add FLUTTERWAVE_SECRET_KEY to enable.');
+      } else {
+        alert('Please select a payment method');
+      }
+    });
+
+    async function startPaystack(email, recaptchaToken) {
+      if (typeof PaystackPop === 'undefined') {
+        alert('Paystack failed to load. Check your connection.');
+        return;
+      }
+
+      document.getElementById('payBtn').disabled = true;
+      document.getElementById('payBtnText').textContent = 'Preparing Paystack...';
+
+      try {
+        // 1. Initialize on backend → get reference
+        const res = await fetch(API_BASE + '/payments/paystack/initialize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            amount: finalPrice,
+            metadata: {
+              game: order.game,
+              playerId: order.playerId,
+              package: order.package.amount,
+              serverId: order.serverId || '',
+              packagePrice: String(finalPrice),
+              email
+            }
+          })
+        });
+        const data = await res.json();
+
+        if (!data.reference) {
+          alert(data.error || 'Paystack not configured. Add PAYSTACK_SECRET_KEY to backend .env');
+          document.getElementById('payBtn').disabled = false;
+          document.getElementById('payBtnText').textContent = 'Pay with Paystack';
+          return;
+        }
+
+        const publicKey = data.publicKey || window.PAYSTACK_PUBLIC_KEY;
+        if (!publicKey) {
+          alert('Missing Paystack public key. Add PAYSTACK_PUBLIC_KEY to backend .env');
+          document.getElementById('payBtn').disabled = false;
+          document.getElementById('payBtnText').textContent = 'Pay with Paystack';
+          return;
+        }
+
+        // 2. Open popup on same page
+        const handler = PaystackPop.setup({
+          key: publicKey,
+          email: email,
+          amount: data.amount || Math.round(finalPrice * 100),
+          ref: data.reference,
+          currency: data.currency || 'NGN',
+          metadata: {
+            game: order.game,
+            playerId: order.playerId,
+            package: order.package.amount,
+            custom_fields: [
+              { display_name: 'Game', variable_name: 'game', value: order.game },
+              { display_name: 'Player ID', variable_name: 'player_id', value: order.playerId }
+            ]
+          },
+          callback: function(response) {
+            // 3. Verify on backend + create order
+            verifyPaystackAndFulfill(response.reference, recaptchaToken);
+          },
+          onClose: function() {
+            document.getElementById('payBtn').disabled = false;
+            document.getElementById('payBtnText').textContent = 'Pay with Paystack';
+          }
+        });
+        handler.openIframe();
+      } catch (e) {
+        console.error(e);
+        alert('Paystack error. Is the backend running and keys set?');
+        document.getElementById('payBtn').disabled = false;
+        document.getElementById('payBtnText').textContent = 'Pay with Paystack';
+      }
+    }
+
+    async function verifyPaystackAndFulfill(reference, recaptchaToken) {
+      document.getElementById('payBtnText').textContent = 'Confirming payment...';
+      try {
+        const res = await fetch(API_BASE + '/payments/paystack/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reference })
+        });
+        const data = await res.json();
+
+        if (data.success || data.orderId) {
+          localStorage.setItem('lastOrder', JSON.stringify({
+            ...order,
+            orderId: data.orderId,
+            status: data.status || 'completed',
+            supplier: data.supplier
+          }));
+          localStorage.removeItem('pendingOrder');
+          window.location.href = 'success.html';
+        } else {
+          alert(data.error || data.message || 'Payment verification failed');
+          document.getElementById('payBtn').disabled = false;
+          document.getElementById('payBtnText').textContent = 'Pay with Paystack';
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Could not verify payment. If you were charged, contact support with reference: ' + reference);
+        document.getElementById('payBtn').disabled = false;
+        document.getElementById('payBtnText').textContent = 'Pay with Paystack';
+      }
+    }
+
+    async function startPaddle(email, recaptchaToken) {
+      if (typeof Paddle === 'undefined') {
+        alert('Paddle.js failed to load. Check your connection and try again.');
+        return;
+      }
+
+      document.getElementById('payBtn').disabled = true;
+      document.getElementById('payBtnText').textContent = 'Opening Paddle...';
+
+      // Save context for after payment
+      localStorage.setItem('pendingPayment', JSON.stringify({
+        gateway: 'paddle',
+        order,
+        finalPrice,
+        recaptchaToken,
+        email
+      }));
+
+      try {
+        Paddle.Checkout.open({
+          items: [{ priceId: PADDLE_PRICE_ID, quantity: 1 }],
+          customer: email ? { email: email } : undefined,
+          customData: {
+            game: order.game,
+            playerId: order.playerId,
+            package: order.package.amount,
+            serverId: order.serverId || '',
+            siteOrderRef: 'NT' + Date.now()
+          },
+          settings: {
+            displayMode: 'overlay',
+            theme: 'dark',
+            successUrl: window.location.origin + window.location.pathname.replace('checkout.html', 'success.html')
+          }
+        });
+      } catch (e) {
+        console.error(e);
+        alert('Could not open Paddle checkout: ' + (e.message || e));
+        document.getElementById('payBtn').disabled = false;
+        document.getElementById('payBtnText').textContent = 'Pay with Paddle';
+      }
+    }
+
+    async function handlePaddleSuccess(event) {
+      const txId = event?.data?.transaction_id || event?.data?.id || ('paddle_' + Date.now());
+      const pending = JSON.parse(localStorage.getItem('pendingPayment') || '{}');
+      const o = pending.order || order;
+
+      try {
+        const res = await fetch(API_BASE + '/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game: o.game,
+            packageAmount: o.package.amount,
+            packagePrice: pending.finalPrice || o.package.price,
+            playerId: o.playerId,
+            serverId: o.serverId || null,
+            customerEmail: pending.email || null,
+            paymentMethod: 'paddle',
+            paymentId: txId,
+            recaptchaToken: pending.recaptchaToken || 'paddle'
+          })
+        });
+        const data = await res.json();
+        localStorage.setItem('lastOrder', JSON.stringify({
+          ...o,
+          orderId: data.orderId,
+          status: data.status,
+          supplier: data.supplier
+        }));
+        localStorage.removeItem('pendingOrder');
+        localStorage.removeItem('pendingPayment');
+        window.location.href = 'success.html';
+      } catch (e) {
+        console.error(e);
+        alert('Payment received but order creation failed. Contact support with Paddle transaction ID: ' + txId);
+        window.location.href = 'success.html';
+      }
+    }
+
+    // Demo payment (always works for testing)
+    document.getElementById('demoPayBtn').addEventListener('click', async () => {
+      const token = getRecaptchaToken() || 'demo';
+      const btn = document.getElementById('demoPayBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Processing...';
+
+      try {
+        const res = await fetch(API_BASE + '/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            game: order.game,
+            packageAmount: order.package.amount,
+            packagePrice: finalPrice,
+            playerId: order.playerId,
+            serverId: order.serverId || null,
+            customerEmail: document.getElementById('payEmail').value.trim() || order.customerEmail || null,
+            paymentMethod: selectedGateway || 'demo',
+            paymentId: 'demo_' + Date.now(),
+            recaptchaToken: token
+          })
+        });
+        const data = await res.json();
+        localStorage.setItem('lastOrder', JSON.stringify({
+          ...order,
+          orderId: data.orderId,
+          status: data.status,
+          supplier: data.supplier
+        }));
+        localStorage.removeItem('pendingOrder');
+        window.location.href = 'success.html';
+      } catch (e) {
+        alert('Order failed. Is the backend running?');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-bolt mr-2"></i> Simulate Payment (Demo)';
+      }
+    });
+
+    // Init
+    loadOptions();
+  </script>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profit Calculator – KamiTopup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7c3aed',
+            secondary: '#06b6d4',
+            dark: '#0f0f13',
+            card: '#1a1a24',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>body { background-color: #0f0f13; }</style>
+</head>
+<body class="text-white font-sans antialiased min-h-screen">
+
+  <nav class="fixed top-0 w-full z-50 bg-dark/90 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <a href="../index.html" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold">K</div>
+        <span class="text-xl font-bold">KamiTopup</span>
+      </a>
+      <span class="text-sm text-gray-400">Profit Calculator</span>
+    </div>
+  </nav>
+
+  <main class="pt-24 pb-16 px-4">
+    <div class="max-w-4xl mx-auto">
+      <h1 class="text-2xl sm:text-3xl font-bold mb-2 text-center">Profit Calculator</h1>
+      <p class="text-gray-400 text-center text-sm mb-10">Set your selling price based on FazerCards cost + fees</p>
+
+      <div class="grid lg:grid-cols-2 gap-6">
+
+        <!-- Input Card -->
+        <div class="bg-card rounded-2xl border border-white/10 p-6 space-y-5">
+          <h2 class="font-semibold text-lg mb-2">Package Details</h2>
+
+          <div>
+            <label class="block text-sm text-gray-400 mb-1.5">Package name (optional)</label>
+            <input type="text" id="pkgName" placeholder="e.g. 100 Free Fire Diamonds"
+              class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-400 mb-1.5">FazerCards cost (USD) *</label>
+            <input type="number" id="cost" step="0.01" min="0" placeholder="0.99" value="0.99"
+              class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-400 mb-1.5">Desired margin %</label>
+            <input type="number" id="margin" step="1" min="0" max="200" value="35"
+              class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none">
+            <p class="text-xs text-gray-500 mt-1">Recommended: 25–40%</p>
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-400 mb-1.5">Or set selling price manually (USD)</label>
+            <input type="number" id="sellPrice" step="0.01" min="0" placeholder="Leave empty to auto-calculate"
+              class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none">
+          </div>
+
+          <div class="border-t border-white/10 pt-4">
+            <h3 class="text-sm font-medium text-gray-400 mb-3">Payment fees (Stripe default)</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">% fee</label>
+                <input type="number" id="feePercent" step="0.1" value="2.9"
+                  class="w-full px-3 py-2 rounded-lg bg-dark border border-white/10 focus:border-primary focus:outline-none text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Fixed fee ($)</label>
+                <input type="number" id="feeFixed" step="0.01" value="0.30"
+                  class="w-full px-3 py-2 rounded-lg bg-dark border border-white/10 focus:border-primary focus:outline-none text-sm">
+              </div>
+            </div>
+          </div>
+
+          <button onclick="calculate()" class="w-full py-3.5 rounded-xl bg-primary hover:bg-violet-600 font-semibold transition">
+            <i class="fas fa-calculator mr-2"></i> Calculate Profit
+          </button>
+        </div>
+
+        <!-- Results Card -->
+        <div class="bg-card rounded-2xl border border-white/10 p-6">
+          <h2 class="font-semibold text-lg mb-5">Results</h2>
+
+          <div id="results" class="space-y-4">
+            <div class="text-center text-gray-500 py-12">
+              <i class="fas fa-chart-line text-4xl mb-3 opacity-40"></i>
+              <p>Enter cost and click Calculate</p>
+            </div>
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-white/10">
+            <h3 class="text-sm font-medium text-gray-400 mb-3">Quick margin presets</h3>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="setMargin(25)" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-sm">25%</button>
+              <button onclick="setMargin(30)" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-sm">30%</button>
+              <button onclick="setMargin(35)" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-sm">35%</button>
+              <button onclick="setMargin(40)" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-sm">40%</button>
+              <button onclick="setMargin(50)" class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-sm">50%</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Batch table -->
+      <div class="mt-10 bg-card rounded-2xl border border-white/10 p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+          <h2 class="font-semibold text-lg">Multi-Package Calculator</h2>
+          <button onclick="addRow()" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-sm font-medium">
+            <i class="fas fa-plus mr-1"></i> Add package
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead class="text-gray-400 border-b border-white/10">
+              <tr>
+                <th class="text-left py-3 pr-3">Package</th>
+                <th class="text-left py-3 pr-3">Cost ($)</th>
+                <th class="text-left py-3 pr-3">Margin %</th>
+                <th class="text-left py-3 pr-3">Sell at</th>
+                <th class="text-left py-3 pr-3">Fees</th>
+                <th class="text-left py-3 pr-3">Net Profit</th>
+                <th class="text-left py-3">Margin</th>
+              </tr>
+            </thead>
+            <tbody id="batchBody"></tbody>
+          </table>
+        </div>
+
+        <div class="mt-4 flex justify-between items-center text-sm">
+          <button onclick="recalcBatch()" class="px-4 py-2 rounded-xl bg-primary hover:bg-violet-600 font-medium">
+            Recalculate All
+          </button>
+          <div class="text-gray-400">
+            Total net profit: <span id="batchTotal" class="text-green-400 font-bold">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div class="mt-8 grid sm:grid-cols-3 gap-4 text-sm">
+        <div class="bg-card/50 rounded-xl p-4 border border-white/5">
+          <div class="text-primary font-semibold mb-1">Safe zone</div>
+          <p class="text-gray-400">25–35% net margin after fees. Competitive but profitable.</p>
+        </div>
+        <div class="bg-card/50 rounded-xl p-4 border border-white/5">
+          <div class="text-yellow-400 font-semibold mb-1">Aggressive</div>
+          <p class="text-gray-400">15–25%. Good for volume, thinner profit per order.</p>
+        </div>
+        <div class="bg-card/50 rounded-xl p-4 border border-white/5">
+          <div class="text-green-400 font-semibold mb-1">Premium</div>
+          <p class="text-gray-400">40%+. Higher price, slower sales, better for niche packages.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function round2(n) {
+      return Math.round(n * 100) / 100;
+    }
+
+    function calc(cost, marginPercent, manualSell, feePct, feeFixed) {
+      cost = parseFloat(cost) || 0;
+      feePct = parseFloat(feePct) || 2.9;
+      feeFixed = parseFloat(feeFixed) || 0.30;
+
+      let sell;
+      if (manualSell && parseFloat(manualSell) > 0) {
+        sell = parseFloat(manualSell);
+      } else {
+        // sell so that after fees we keep the desired margin on cost
+        // Target: (sell - fees - cost) / sell ≈ margin%  is complex.
+        // Simpler practical approach used by most resellers:
+        // sell = cost * (1 + margin/100), then subtract fees from profit
+        sell = cost * (1 + (parseFloat(marginPercent) || 35) / 100);
+        // Round to nice .99 / .49 endings
+        sell = Math.ceil(sell * 100 - 1) / 100; // rough
+        if (sell < 1) sell = round2(sell);
+        else sell = Math.floor(sell) + 0.99;
+      }
+
+      const fees = round2(sell * (feePct / 100) + feeFixed);
+      const net = round2(sell - cost - fees);
+      const netMargin = sell > 0 ? round2((net / sell) * 100) : 0;
+
+      return { sell: round2(sell), fees, net, netMargin, cost };
+    }
+
+    function calculate() {
+      const cost = document.getElementById('cost').value;
+      const margin = document.getElementById('margin').value;
+      const sellPrice = document.getElementById('sellPrice').value;
+      const feePct = document.getElementById('feePercent').value;
+      const feeFixed = document.getElementById('feeFixed').value;
+      const name = document.getElementById('pkgName').value || 'Package';
+
+      if (!cost || parseFloat(cost) <= 0) {
+        alert('Enter a valid FazerCards cost');
+        return;
+      }
+
+      const r = calc(cost, margin, sellPrice, feePct, feeFixed);
+
+      const profitColor = r.net >= 0 ? 'text-green-400' : 'text-red-400';
+      const marginColor = r.netMargin >= 25 ? 'text-green-400' : r.netMargin >= 15 ? 'text-yellow-400' : 'text-red-400';
+
+      document.getElementById('results').innerHTML = `
+        <div class="text-sm text-gray-400 mb-1">${name}</div>
+        
+        <div class="flex justify-between items-center py-3 border-b border-white/5">
+          <span class="text-gray-400">FazerCards cost</span>
+          <span class="font-mono">$${r.cost.toFixed(2)}</span>
+        </div>
+        <div class="flex justify-between items-center py-3 border-b border-white/5">
+          <span class="text-gray-400">Recommended sell price</span>
+          <span class="font-mono text-primary text-lg font-bold">$${r.sell.toFixed(2)}</span>
+        </div>
+        <div class="flex justify-between items-center py-3 border-b border-white/5">
+          <span class="text-gray-400">Payment fees</span>
+          <span class="font-mono text-red-300">-$${r.fees.toFixed(2)}</span>
+        </div>
+        <div class="flex justify-between items-center py-3 border-b border-white/5">
+          <span class="text-gray-400">Net profit per order</span>
+          <span class="font-mono ${profitColor} text-lg font-bold">$${r.net.toFixed(2)}</span>
+        </div>
+        <div class="flex justify-between items-center py-3">
+          <span class="text-gray-400">Net margin</span>
+          <span class="font-mono ${marginColor} font-bold">${r.netMargin}%</span>
+        </div>
+
+        <div class="mt-6 p-4 rounded-xl bg-primary/10 border border-primary/20 text-sm">
+          <i class="fas fa-lightbulb text-primary mr-2"></i>
+          ${r.netMargin >= 25
+            ? 'Solid margin. Good to go.'
+            : r.netMargin >= 15
+              ? 'Thin margin. Consider raising the price slightly.'
+              : 'Too low / negative. Increase selling price.'}
+        </div>
+      `;
+    }
+
+    function setMargin(m) {
+      document.getElementById('margin').value = m;
+      document.getElementById('sellPrice').value = '';
+      calculate();
+    }
+
+    // Batch calculator
+    let rowId = 0;
+    function addRow(name = '', cost = '', margin = 35) {
+      const id = rowId++;
+      const tr = document.createElement('tr');
+      tr.id = 'row-' + id;
+      tr.className = 'border-b border-white/5';
+      tr.innerHTML = `
+        <td class="py-2 pr-2"><input data-f="name" value="${name}" class="w-full min-w-[120px] px-2 py-1.5 rounded bg-dark border border-white/10 text-sm"></td>
+        <td class="py-2 pr-2"><input data-f="cost" type="number" step="0.01" value="${cost}" class="w-20 px-2 py-1.5 rounded bg-dark border border-white/10 text-sm"></td>
+        <td class="py-2 pr-2"><input data-f="margin" type="number" value="${margin}" class="w-16 px-2 py-1.5 rounded bg-dark border border-white/10 text-sm"></td>
+        <td class="py-2 pr-2 font-mono text-primary" data-r="sell">—</td>
+        <td class="py-2 pr-2 font-mono text-red-300" data-r="fees">—</td>
+        <td class="py-2 pr-2 font-mono text-green-400" data-r="net">—</td>
+        <td class="py-2 font-mono" data-r="margin">—</td>
+      `;
+      document.getElementById('batchBody').appendChild(tr);
+    }
+
+    function recalcBatch() {
+      const feePct = document.getElementById('feePercent').value;
+      const feeFixed = document.getElementById('feeFixed').value;
+      let total = 0;
+
+      document.querySelectorAll('#batchBody tr').forEach(tr => {
+        const cost = tr.querySelector('[data-f="cost"]').value;
+        const margin = tr.querySelector('[data-f="margin"]').value;
+        if (!cost) return;
+        const r = calc(cost, margin, null, feePct, feeFixed);
+        tr.querySelector('[data-r="sell"]').textContent = '$' + r.sell.toFixed(2);
+        tr.querySelector('[data-r="fees"]').textContent = '-$' + r.fees.toFixed(2);
+        tr.querySelector('[data-r="net"]').textContent = '$' + r.net.toFixed(2);
+        tr.querySelector('[data-r="margin"]').textContent = r.netMargin + '%';
+        total += r.net;
+      });
+
+      document.getElementById('batchTotal').textContent = '$' + total.toFixed(2);
+    }
+
+    // Seed some example rows
+    addRow('100 FF Diamonds', '0.85', 35);
+    addRow('310 FF Diamonds', '2.40', 35);
+    addRow('60 PUBG UC', '0.95', 35);
+    addRow('325 PUBG UC', '4.80', 35);
+    addRow('86 MLBB Diamonds', '1.60', 35);
+
+    // Auto-calc single on load
+    calculate();
+    recalcBatch();
+  </script>
+</body>
+</html>

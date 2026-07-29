@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Successful – KamiTopup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7c3aed',
+            secondary: '#06b6d4',
+            dark: '#0f0f13',
+            card: '#1a1a24',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>body { background-color: #0f0f13; }</style>
+</head>
+<body class="text-white font-sans antialiased min-h-screen">
+
+  <nav class="fixed top-0 w-full z-50 bg-dark/90 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center">
+      <a href="../index.html" class="flex items-center gap-2">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold">K</div>
+        <span class="text-xl font-bold">KamiTopup</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="pt-28 pb-16 px-4">
+    <div class="max-w-md mx-auto text-center">
+      
+      <div class="w-20 h-20 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-6">
+        <i class="fas fa-check text-4xl text-green-400"></i>
+      </div>
+
+      <h1 class="text-3xl font-bold mb-3">Payment Successful!</h1>
+      <p class="text-gray-400 mb-8">Your top-up has been processed.</p>
+
+      <div class="bg-card rounded-2xl border border-white/10 p-6 text-left mb-6">
+        <div class="space-y-3 text-sm" id="orderDetails"></div>
+      </div>
+
+      <div id="statusBox" class="rounded-xl p-4 text-sm mb-8"></div>
+
+      <div class="flex flex-col gap-3">
+        <a href="../index.html" class="py-3.5 rounded-xl bg-primary hover:bg-violet-600 font-semibold transition">
+          Top Up Another Game
+        </a>
+        <a href="orders.html" class="py-3.5 rounded-xl bg-white/10 hover:bg-white/15 font-semibold transition">
+          Track Order
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const order = JSON.parse(localStorage.getItem('lastOrder') || '{}');
+    if (!order.orderId) window.location.href = '../index.html';
+
+    document.getElementById('orderDetails').innerHTML = `
+      <div class="flex justify-between"><span class="text-gray-400">Order ID</span><span class="font-mono font-medium">${order.orderId}</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Game</span><span class="capitalize">${order.game}</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Package</span><span>${order.package?.amount || '—'}</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Player ID</span><span class="font-mono">${order.playerId}</span></div>
+      <div class="flex justify-between"><span class="text-gray-400">Status</span>
+        <span class="${order.status === 'completed' ? 'text-green-400' : order.status === 'failed' ? 'text-red-400' : 'text-yellow-400'} font-medium">
+          ${order.status || 'processing'}
+        </span>
+      </div>
+      ${order.supplier ? `<div class="flex justify-between"><span class="text-gray-400">Supplier</span><span class="capitalize">${order.supplier}</span></div>` : ''}
+    `;
+
+    const box = document.getElementById('statusBox');
+    if (order.status === 'completed') {
+      box.className = 'bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-sm text-green-200 mb-8';
+      box.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Top-up delivered successfully! Check your game account.';
+    } else if (order.status === 'failed') {
+      box.className = 'bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-sm text-red-200 mb-8';
+      box.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i> Delivery failed. Please contact support with your Order ID for a refund or retry.';
+    } else {
+      box.className = 'bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 text-sm text-yellow-200 mb-8';
+      box.innerHTML = '<i class="fas fa-clock mr-2"></i> Processing... Delivery usually takes 10–90 seconds.';
+    }
+  </script>
+</body>
+</html>

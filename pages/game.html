@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Top Up – KamiTopup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#7c3aed',
+            secondary: '#06b6d4',
+            dark: '#0f0f13',
+            card: '#1a1a24',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    body { background-color: #0f0f13; }
+    .package-card.selected { border-color: #7c3aed; background: rgba(124, 58, 237, 0.15); }
+    .package-card:hover { border-color: rgba(124, 58, 237, 0.5); }
+  </style>
+</head>
+<body class="text-white font-sans antialiased min-h-screen">
+
+  <nav class="fixed top-0 w-full z-50 bg-dark/90 backdrop-blur-md border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="../index.html" class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-bold text-lg">K</div>
+          <span class="text-xl font-bold tracking-tight">KamiTopup</span>
+        </a>
+        <a href="../index.html" class="text-sm text-gray-400 hover:text-white flex items-center gap-2">
+          <i class="fas fa-arrow-left"></i> Back to Games
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="pt-24 pb-16 px-4">
+    <div class="max-w-5xl mx-auto">
+      
+      <div class="flex flex-col sm:flex-row gap-6 items-start mb-10">
+        <div id="gameIcon" class="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/40 to-secondary/30 flex items-center justify-center text-5xl shrink-0">
+          🎮
+        </div>
+        <div>
+          <h1 id="gameTitle" class="text-3xl font-bold mb-2">Loading...</h1>
+          <p id="gameSubtitle" class="text-gray-400 mb-3">—</p>
+          <div class="flex flex-wrap gap-3 text-sm">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/20 text-green-400">
+              <i class="fas fa-bolt"></i> Instant Delivery
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400">
+              <i class="fas fa-shield-alt"></i> Secure
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 text-purple-400">
+              <i class="fas fa-tags"></i> Best Price
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-5 gap-8">
+        <div class="lg:col-span-3">
+          <h2 class="text-lg font-semibold mb-4">Select Package</h2>
+          <div id="packages" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div class="col-span-full text-center text-gray-500 py-8">Loading packages...</div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2">
+          <div class="bg-card rounded-2xl border border-white/10 p-6 sticky top-24">
+            <h2 class="text-lg font-semibold mb-5">Order Details</h2>
+            
+            <form id="orderForm" class="space-y-5">
+              <div>
+                <label class="block text-sm text-gray-400 mb-1.5">Player ID / User ID</label>
+                <input type="text" id="playerId" required placeholder="Enter your Player ID"
+                  class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none transition">
+                <p class="text-xs text-gray-500 mt-1.5">Find it in your game profile. We never ask for password.</p>
+              </div>
+
+              <div id="serverField">
+                <label class="block text-sm text-gray-400 mb-1.5">Server / Zone ID</label>
+                <input type="text" id="serverId" placeholder="e.g. 1234 or Server name"
+                  class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none transition">
+              </div>
+
+              <div class="bg-primary/10 border border-primary/20 rounded-xl p-4">
+                <label class="block text-sm text-primary mb-1.5 font-medium">
+                  <i class="fas fa-envelope mr-1"></i> Email for receipt
+                </label>
+                <input type="email" id="customerEmail" placeholder="you@email.com"
+                  class="w-full px-4 py-3 rounded-xl bg-dark border border-white/10 focus:border-primary focus:outline-none transition">
+                <p class="text-xs text-gray-400 mt-1.5">We will send a confirmation email after successful top-up (recommended)</p>
+              </div>
+
+              <div class="border-t border-white/10 pt-4">
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-gray-400">Selected</span>
+                  <span id="selectedPackage" class="font-medium">—</span>
+                </div>
+                <div class="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span id="totalPrice" class="text-primary">$0.00</span>
+                </div>
+              </div>
+
+              <button type="submit" id="buyBtn" disabled
+                class="w-full py-3.5 rounded-xl bg-primary hover:bg-violet-600 disabled:opacity-40 disabled:cursor-not-allowed font-semibold transition flex items-center justify-center gap-2">
+                <i class="fas fa-lock"></i> Proceed to Payment
+              </button>
+            </form>
+
+            <p class="text-xs text-gray-500 text-center mt-4">
+              By continuing you agree to our Terms of Service
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="border-t border-white/10 py-8 px-4 text-center text-sm text-gray-500">
+    © 2026 KamiTopup. Secure & Fast Game Top-Ups.
+  </footer>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api'; // change when deployed
+
+    // Multi-currency
+    const RATES = { USD:1, EUR:0.92, GBP:0.79, NGN:1600, GHS:15.5, KES:129, IDR:16200, PHP:58, MYR:4.7, INR:83.5, BRL:5.6, TRY:34.5, AED:3.67 };
+    const SYMBOLS = { USD:'$', EUR:'€', GBP:'£', NGN:'₦', GHS:'GH₵', KES:'KSh', IDR:'Rp', PHP:'₱', MYR:'RM', INR:'₹', BRL:'R$', TRY:'₺', AED:'د.إ' };
+    const preferredCurrency = localStorage.getItem('kamitopup_currency') || 'USD';
+
+    function convertPrice(usd) {
+      const rate = RATES[preferredCurrency] || 1;
+      const symbol = SYMBOLS[preferredCurrency] || preferredCurrency + ' ';
+      const value = preferredCurrency === 'IDR' || preferredCurrency === 'NGN'
+        ? Math.round(usd * rate)
+        : +(usd * rate).toFixed(2);
+      return { symbol, value, formatted: symbol + value.toLocaleString() };
+    }
+
+
+    // Fallback catalog (used if backend is offline)
+    const FALLBACK = {
+      mlbb: { title: "Mobile Legends", subtitle: "Diamonds Top-Up", icon: "⚔️", needsServer: true, packages: [
+        { id: 1, amount: "86 Diamonds", price: 1.99, original: 2.49 },
+        { id: 2, amount: "172 Diamonds", price: 3.79, original: 4.99 },
+        { id: 3, amount: "257 Diamonds", price: 5.49, original: 6.99 },
+        { id: 4, amount: "344 Diamonds", price: 7.29, original: 8.99 },
+        { id: 5, amount: "429 Diamonds", price: 8.99, original: 10.99 },
+        { id: 6, amount: "514 Diamonds", price: 10.49, original: 12.99 },
+        { id: 7, amount: "706 Diamonds", price: 14.49, original: 17.99 },
+        { id: 8, amount: "1412 Diamonds", price: 28.99, original: 34.99 },
+        { id: 9, amount: "2195 Diamonds", price: 44.99, original: 54.99 },
+        { id: 10, amount: "3688 Diamonds", price: 74.99, original: 89.99 },
+        { id: 11, amount: "5532 Diamonds", price: 109.99, original: 129.99 },
+        { id: 12, amount: "9288 Diamonds", price: 179.99, original: 219.99 },
+      ]},
+      freefire: { title: "Free Fire", subtitle: "Diamonds", icon: "🔥", needsServer: false, packages: [
+        { id: 1, amount: "100 Diamonds", price: 0.99, original: 1.29 },
+        { id: 2, amount: "310 Diamonds", price: 2.99, original: 3.79 },
+        { id: 3, amount: "520 Diamonds", price: 4.99, original: 6.29 },
+        { id: 4, amount: "1060 Diamonds", price: 9.99, original: 12.49 },
+        { id: 5, amount: "2180 Diamonds", price: 19.99, original: 24.99 },
+        { id: 6, amount: "5600 Diamonds", price: 49.99, original: 59.99 },
+      ]},
+      pubg: { title: "PUBG Mobile", subtitle: "UC", icon: "🎯", needsServer: false, packages: [
+        { id: 1, amount: "60 UC", price: 0.99, original: 1.19 },
+        { id: 2, amount: "325 UC", price: 4.99, original: 5.99 },
+        { id: 3, amount: "660 UC", price: 9.99, original: 11.99 },
+        { id: 4, amount: "1800 UC", price: 24.99, original: 29.99 },
+        { id: 5, amount: "3850 UC", price: 49.99, original: 59.99 },
+        { id: 6, amount: "8100 UC", price: 99.99, original: 119.99 },
+      ]},
+      genshin: { title: "Genshin Impact", subtitle: "Genesis Crystals", icon: "✨", needsServer: true, packages: [
+        { id: 1, amount: "60 Genesis Crystals", price: 0.99, original: 1.19 },
+        { id: 2, amount: "300 + 30", price: 4.99, original: 5.99 },
+        { id: 3, amount: "980 + 110", price: 14.99, original: 17.99 },
+        { id: 4, amount: "1980 + 260", price: 29.99, original: 34.99 },
+        { id: 5, amount: "3280 + 600", price: 49.99, original: 59.99 },
+        { id: 6, amount: "6480 + 1600", price: 99.99, original: 119.99 },
+      ]},
+      valorant: { title: "Valorant", subtitle: "Points", icon: "🏹", needsServer: false, packages: [
+        { id: 1, amount: "475 VP", price: 4.99, original: 5.99 },
+        { id: 2, amount: "1000 VP", price: 9.99, original: 11.99 },
+        { id: 3, amount: "2050 VP", price: 19.99, original: 23.99 },
+        { id: 4, amount: "3650 VP", price: 34.99, original: 39.99 },
+        { id: 5, amount: "5350 VP", price: 49.99, original: 59.99 },
+        { id: 6, amount: "11000 VP", price: 99.99, original: 119.99 },
+      ]},
+      roblox: { title: "Roblox", subtitle: "Robux", icon: "🧱", needsServer: false, packages: [
+        { id: 1, amount: "400 Robux", price: 4.99, original: 5.99 },
+        { id: 2, amount: "800 Robux", price: 9.99, original: 11.99 },
+        { id: 3, amount: "1700 Robux", price: 19.99, original: 23.99 },
+        { id: 4, amount: "4500 Robux", price: 49.99, original: 59.99 },
+        { id: 5, amount: "10000 Robux", price: 99.99, original: 119.99 },
+      ]},
+      codm: { title: "Call of Duty Mobile", subtitle: "CP", icon: "💥", needsServer: false, packages: [
+        { id: 1, amount: "80 CP", price: 0.99, original: 1.19 },
+        { id: 2, amount: "400 CP", price: 4.99, original: 5.99 },
+        { id: 3, amount: "800 CP", price: 9.99, original: 11.99 },
+        { id: 4, amount: "2000 CP", price: 24.99, original: 29.99 },
+        { id: 5, amount: "4000 CP", price: 49.99, original: 59.99 },
+      ]},
+      honkai: { title: "Honkai: Star Rail", subtitle: "Oneiric Shards", icon: "🌌", needsServer: true, packages: [
+        { id: 1, amount: "60 Oneiric Shards", price: 0.99, original: 1.19 },
+        { id: 2, amount: "300 + 30", price: 4.99, original: 5.99 },
+        { id: 3, amount: "980 + 110", price: 14.99, original: 17.99 },
+        { id: 4, amount: "1980 + 260", price: 29.99, original: 34.99 },
+        { id: 5, amount: "3280 + 600", price: 49.99, original: 59.99 },
+        { id: 6, amount: "6480 + 1600", price: 99.99, original: 119.99 },
+      ]},
+      zenless: { title: "Zenless Zone Zero", subtitle: "Monochromes", icon: "🌃", needsServer: true, packages: [
+        { id: 1, amount: "60 Monochromes", price: 0.99, original: 1.19 },
+        { id: 2, amount: "300 + 30", price: 4.99, original: 5.99 },
+        { id: 3, amount: "980 + 110", price: 14.99, original: 17.99 },
+        { id: 4, amount: "1980 + 260", price: 29.99, original: 34.99 },
+        { id: 5, amount: "3280 + 600", price: 49.99, original: 59.99 },
+        { id: 6, amount: "6480 + 1600", price: 99.99, original: 119.99 },
+      ]},
+      lol: { title: "League of Legends", subtitle: "Riot Points", icon: "🛡️", needsServer: false, packages: [
+        { id: 1, amount: "575 RP", price: 4.99, original: 5.99 },
+        { id: 2, amount: "1380 RP", price: 10.99, original: 12.99 },
+        { id: 3, amount: "2800 RP", price: 21.99, original: 24.99 },
+        { id: 4, amount: "5000 RP", price: 34.99, original: 39.99 },
+        { id: 5, amount: "7200 RP", price: 49.99, original: 59.99 },
+      ]},
+      brawl: { title: "Brawl Stars", subtitle: "Gems", icon: "⭐", needsServer: false, packages: [
+        { id: 1, amount: "30 Gems", price: 1.99, original: 2.49 },
+        { id: 2, amount: "80 Gems", price: 4.99, original: 5.99 },
+        { id: 3, amount: "170 Gems", price: 9.99, original: 11.99 },
+        { id: 4, amount: "360 Gems", price: 19.99, original: 23.99 },
+        { id: 5, amount: "950 Gems", price: 49.99, original: 59.99 },
+      ]},
+      clash: { title: "Clash of Clans", subtitle: "Gems", icon: "🏰", needsServer: false, packages: [
+        { id: 1, amount: "80 Gems", price: 0.99, original: 1.19 },
+        { id: 2, amount: "500 Gems", price: 4.99, original: 5.99 },
+        { id: 3, amount: "1200 Gems", price: 9.99, original: 11.99 },
+        { id: 4, amount: "2500 Gems", price: 19.99, original: 23.99 },
+        { id: 5, amount: "6500 Gems", price: 49.99, original: 59.99 },
+      ]},
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const gameKey = params.get('game') || 'mlbb';
+    let selectedPkg = null;
+    let currentGame = null;
+
+    async function loadGame() {
+      // Try live prices from backend first
+      try {
+        const res = await fetch(API_BASE + '/products/' + gameKey);
+        if (res.ok) {
+          currentGame = await res.json();
+          // Add icon emoji from fallback if missing
+          if (!currentGame.icon || currentGame.icon.length > 2) {
+            currentGame.icon = FALLBACK[gameKey]?.icon || '🎮';
+          }
+        }
+      } catch (e) {
+        console.log('Backend offline, using fallback catalog');
+      }
+
+      if (!currentGame) {
+        currentGame = FALLBACK[gameKey] || FALLBACK.mlbb;
+      }
+
+      document.getElementById('gameTitle').textContent = currentGame.title;
+      document.getElementById('gameSubtitle').textContent = currentGame.subtitle;
+      document.getElementById('gameIcon').textContent = currentGame.icon || '🎮';
+      document.title = `Top Up ${currentGame.title} – KamiTopup`;
+
+      if (!currentGame.needsServer) {
+        document.getElementById('serverField').style.display = 'none';
+      }
+
+      renderPackages(currentGame.packages || []);
+    }
+
+    function renderPackages(packages) {
+      const container = document.getElementById('packages');
+      container.innerHTML = '';
+      packages.forEach(pkg => {
+        const card = document.createElement('div');
+        card.className = 'package-card cursor-pointer p-4 rounded-xl border border-white/10 bg-dark transition';
+        const converted = convertPrice(Number(pkg.price));
+        const originalConverted = pkg.original ? convertPrice(Number(pkg.original)) : null;
+        card.innerHTML = `
+          <div class="font-semibold text-sm mb-1">${pkg.amount}</div>
+          <div class="text-primary font-bold">${converted.formatted}</div>
+          ${originalConverted ? `<div class="text-xs text-gray-500 line-through">${originalConverted.formatted}</div>` : ''}
+          ${preferredCurrency !== 'USD' ? `<div class="text-[10px] text-gray-500">≈ $${Number(pkg.price).toFixed(2)}</div>` : ''}
+        `;
+        card.onclick = () => selectPackage(pkg, card);
+        container.appendChild(card);
+      });
+    }
+
+    function selectPackage(pkg, element) {
+      document.querySelectorAll('.package-card').forEach(c => c.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedPkg = pkg;
+      document.getElementById('selectedPackage').textContent = pkg.amount;
+      const conv = convertPrice(Number(pkg.price));
+      document.getElementById('totalPrice').textContent = conv.formatted;
+      if (preferredCurrency !== 'USD') {
+        document.getElementById('totalPrice').title = '≈ $' + Number(pkg.price).toFixed(2);
+      }
+      document.getElementById('buyBtn').disabled = false;
+    }
+
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!selectedPkg) return;
+
+      const playerId = document.getElementById('playerId').value.trim();
+      const serverId = document.getElementById('serverId')?.value.trim() || '';
+      const customerEmail = document.getElementById('customerEmail')?.value.trim() || '';
+
+      if (!playerId) {
+        alert('Please enter your Player ID');
+        return;
+      }
+
+      const orderData = {
+        game: gameKey,
+        package: selectedPkg,
+        playerId,
+        serverId,
+        customerEmail,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+      window.location.href = 'checkout.html';
+    });
+
+    loadGame();
+  </script>
+</body>
+</html>
