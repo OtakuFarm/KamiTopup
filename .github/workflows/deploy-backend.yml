@@ -1,0 +1,54 @@
+# Deploy Backend to Railway (or Render)
+# Trigger: push to main affecting backend/**
+
+name: Deploy Backend
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:  # manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Basic syntax check
+        run: node --check server.js
+
+      # ---------- Railway deployment ----------
+      # 1. Install Railway CLI
+      # 2. Deploy using RAILWAY_TOKEN secret
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway up --service ${{ secrets.RAILWAY_SERVICE_ID || 'novatop-backend' }} --detach
+        # Alternative if using project token linked:
+        # run: railway up --detach
+
+      # ---------- Optional: Render deploy hook ----------
+      # Uncomment if you prefer Render instead of Railway
+      # - name: Trigger Render Deploy Hook
+      #   run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
